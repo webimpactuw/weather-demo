@@ -35,7 +35,7 @@ export default function WeatherApp() {
       humidity: 45,
       windSpeed: 8,
     },
-    "London": {
+    London: {
       temperature: 62,
       condition: "cloudy",
       humidity: 78,
@@ -58,7 +58,7 @@ export default function WeatherApp() {
 
     const filtered = CityNames.filter(
       (city) =>
-        city.includes(query) &&
+        city.toLowerCase().includes(query.toLowerCase()) &&
         !cities.includes(city),
     );
     setSuggestions(filtered.slice(0, 5));
@@ -88,13 +88,19 @@ export default function WeatherApp() {
     };
 
     setCities([...cities, cityName]);
-    setDataCache({...dataCache, cityName: newData});
+    setDataCache({ ...dataCache, [cityName]: newData });
     setSearchQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
 
     // Show the new city details in dialog
     setSelectedCity(cityName);
+    setDialogOpen(false);
+  };
+
+  // Add a city from suggestions
+  const removeCity = (cityName: string) => {
+    setCities(cities.filter((city) => city !== cityName));
     setDialogOpen(false);
   };
 
@@ -105,21 +111,20 @@ export default function WeatherApp() {
   };
 
   // Function to render the appropriate weather icon based on condition
-  const renderWeatherIcon = (condition: string, size = 8) => {
-    const className = `h-${size} w-${size}`;
+  const renderWeatherIcon = (condition: string) => {
     switch (condition) {
       case "sunny":
-        return <Sun className={`${className} text-yellow-500`} />;
+        return <Sun className="h-8 w-8 text-yellow-500" />;
       case "cloudy":
-        return <Cloud className={`${className} text-gray-500`} />;
+        return <Cloud className="h-8 w-8 text-gray-500" />;
       case "rainy":
-        return <CloudRain className={`${className} text-blue-500`} />;
+        return <CloudRain className="h-8 w-8 text-blue-500" />;
       case "partly-cloudy":
-        return <Cloud className={`${className} text-gray-400`} />;
+        return <Cloud className="h-8 w-8 text-gray-400" />;
       case "snowy":
-        return <CloudSnow className={`${className} text-blue-300`} />;
+        return <CloudSnow className="h-8 w-8 text-blue-300" />;
       default:
-        return <Wind className={`${className} text-gray-500`} />;
+        return <Wind className="h-8 w-8 text-gray-500" />;
     }
   };
 
@@ -168,7 +173,7 @@ export default function WeatherApp() {
             >
               <div className="flex items-center">
                 <div className="mr-3">
-                  {renderWeatherIcon(dataCache[city].condition, 6)}
+                  {renderWeatherIcon(dataCache[city].condition)}
                 </div>
                 <span className="font-medium">{city}</span>
               </div>
@@ -188,6 +193,23 @@ export default function WeatherApp() {
               <DialogTitle>{selectedCity}</DialogTitle>
             </DialogHeader>
             {/* TODO: Add dialog content */}
+            {cities.includes(selectedCity) ? (
+              <button
+                onClick={() => removeCity(selectedCity)}
+                type="button"
+                className="rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
+              >
+                Remove City
+              </button>
+            ) : (
+              <button
+                onClick={() => addCity(selectedCity)}
+                type="button"
+                className="rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
+              >
+                Add City
+              </button>
+            )}
           </DialogContent>
         )}
       </Dialog>
