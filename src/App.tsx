@@ -1,9 +1,197 @@
+"use client";
+
+import type React from "react";
 import { useState } from "react";
+import { Input } from "./components/ui/input";
+import { Cloud, CloudRain, CloudSnow, Sun, Wind } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "./components/ui/dialog";
+import CityNames from "./lib/citynames.json";
 
-function App() {
-  const [count, setCount] = useState(0);
+// City type definition
+type City = {
+  name: string;
+  temperature: number;
+  condition: string;
+  humidity: number;
+  windSpeed: number;
+};
 
-  return <div className="size-full bg-stone-400"></div>;
+export default function WeatherApp() {
+  // Mock data for saved cities with weather information
+  const [cities, setCities] = useState<City[]>([
+    {
+      name: "New York City",
+      temperature: 72,
+      condition: "sunny",
+      humidity: 45,
+      windSpeed: 8,
+    },
+    {
+      name: "London",
+      temperature: 62,
+      condition: "cloudy",
+      humidity: 78,
+      windSpeed: 12,
+    },
+  ]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Update suggestions based on search query
+  const updateSuggestions = (query: string) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+
+    const filtered = CityNames.filter(
+      (city) =>
+        city.toLowerCase().includes(query.toLowerCase()) &&
+        !cities.some((c) => c.name.toLowerCase() === city.toLowerCase()),
+    );
+    setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    updateSuggestions(value);
+    setShowSuggestions(true);
+  };
+
+  // Add a city from suggestions
+  const addCity = (cityName: string) => {
+    // Check if city already exists
+    if (
+      cities.some((city) => city.name.toLowerCase() === cityName.toLowerCase())
+    ) {
+      return;
+    }
+
+    // Generate random weather data for the new city
+    const conditions = ["sunny", "cloudy", "rainy", "partly-cloudy", "snowy"];
+    const newCity = {
+      id: cities.length + 1,
+      name: cityName,
+      temperature: Math.floor(Math.random() * 40) + 50, // Random temp between 50-90
+      condition: conditions[Math.floor(Math.random() * conditions.length)],
+      humidity: Math.floor(Math.random() * 50) + 30, // Random humidity between 30-80
+      windSpeed: Math.floor(Math.random() * 15) + 3, // Random wind between 3-18
+    };
+
+    setCities([...cities, newCity]);
+    setSearchQuery("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+
+    // Show the new city details in dialog
+    setSelectedCity(newCity);
+    setDialogOpen(true);
+  };
+
+  // Handle city selection
+  const handleCitySelect = (city: City) => {
+    setSelectedCity(city);
+    setDialogOpen(true);
+  };
+
+  // Function to render the appropriate weather icon based on condition
+  const renderWeatherIcon = (condition: string, size = 8) => {
+    const className = `h-${size} w-${size}`;
+    switch (condition) {
+      case "sunny":
+        return <Sun className={`${className} text-yellow-500`} />;
+      case "cloudy":
+        return <Cloud className={`${className} text-gray-500`} />;
+      case "rainy":
+        return <CloudRain className={`${className} text-blue-500`} />;
+      case "partly-cloudy":
+        return <Cloud className={`${className} text-gray-400`} />;
+      case "snowy":
+        return <CloudSnow className={`${className} text-blue-300`} />;
+      default:
+        return <Wind className={`${className} text-gray-500`} />;
+    }
+  };
+
+  return (
+    <main className="container mx-auto p-8 max-w-4xl">
+      <h1 className="text-3xl font-bold mb-6 text-center">Weather Demo</h1>
+
+      {/* Search Bar with Autocomplete */}
+      <div className="mb-6 relative">
+        <Input
+          type="text"
+          placeholder="Search for a city..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          onFocus={() => updateSuggestions(searchQuery)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          className="w-full"
+        />
+
+        {/* Autocomplete Suggestions */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200">
+            <ul className="py-1">
+              {suggestions.map((city, index) => (
+                <li
+                  key={index}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => addCity(city)}
+                >
+                  {city}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* City List */}
+      <div className="border rounded-lg overflow-hidden">
+        <ul>
+          {cities.map((city, i) => (
+            <li
+              key={i}
+              className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
+              onClick={() => handleCitySelect(city)}
+            >
+              <div className="flex items-center">
+                <div className="mr-3">
+                  {renderWeatherIcon(city.condition, 6)}
+                </div>
+                <span className="font-medium">{city.name}</span>
+              </div>
+              <span className="text-lg font-semibold">
+                {city.temperature}°F
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* City Detail Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        {selectedCity && (
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{selectedCity.name}</DialogTitle>
+            </DialogHeader>
+            {/* TODO: Add dialog content */}
+          </DialogContent>
+        )}
+      </Dialog>
+    </main>
+  );
 }
-
-export default App;
