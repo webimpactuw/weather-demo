@@ -12,38 +12,41 @@ import {
 } from "./components/ui/dialog";
 import CityNames from "./lib/citynames.json";
 
-// City type definition
-type City = {
-  name: string;
+type CityMapping = {
+  [key: string]: CityData;
+};
+
+type CityData = {
   temperature: number;
   condition: string;
   humidity: number;
   windSpeed: number;
 };
 
+const conditions = ["sunny", "cloudy", "rainy", "partly-cloudy", "snowy"];
+
 export default function WeatherApp() {
   // Mock data for saved cities with weather information
-  const [cities, setCities] = useState<City[]>([
-    {
-      name: "New York City",
+  const [cities, setCities] = useState<string[]>(["New York City", "London"]);
+  const [dataCache, setDataCache] = useState<CityMapping>({
+    "New York City": {
       temperature: 72,
       condition: "sunny",
       humidity: 45,
       windSpeed: 8,
     },
-    {
-      name: "London",
+    "London": {
       temperature: 62,
       condition: "cloudy",
       humidity: 78,
       windSpeed: 12,
     },
-  ]);
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Update suggestions based on search query
@@ -55,10 +58,10 @@ export default function WeatherApp() {
 
     const filtered = CityNames.filter(
       (city) =>
-        city.toLowerCase().includes(query.toLowerCase()) &&
-        !cities.some((c) => c.name.toLowerCase() === city.toLowerCase()),
+        city.includes(query) &&
+        !cities.includes(city),
     );
-    setSuggestions(filtered.slice(0, 5)); // Limit to 5 suggestions
+    setSuggestions(filtered.slice(0, 5));
   };
 
   // Handle search input change
@@ -72,36 +75,32 @@ export default function WeatherApp() {
   // Add a city from suggestions
   const addCity = (cityName: string) => {
     // Check if city already exists
-    if (
-      cities.some((city) => city.name.toLowerCase() === cityName.toLowerCase())
-    ) {
+    if (cities.includes(cityName)) {
       return;
     }
 
     // Generate random weather data for the new city
-    const conditions = ["sunny", "cloudy", "rainy", "partly-cloudy", "snowy"];
-    const newCity = {
-      id: cities.length + 1,
-      name: cityName,
+    const newData = {
       temperature: Math.floor(Math.random() * 40) + 50, // Random temp between 50-90
       condition: conditions[Math.floor(Math.random() * conditions.length)],
       humidity: Math.floor(Math.random() * 50) + 30, // Random humidity between 30-80
       windSpeed: Math.floor(Math.random() * 15) + 3, // Random wind between 3-18
     };
 
-    setCities([...cities, newCity]);
+    setCities([...cities, cityName]);
+    setDataCache({...dataCache, cityName: newData});
     setSearchQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
 
     // Show the new city details in dialog
-    setSelectedCity(newCity);
-    setDialogOpen(true);
+    setSelectedCity(cityName);
+    setDialogOpen(false);
   };
 
   // Handle city selection
-  const handleCitySelect = (city: City) => {
-    setSelectedCity(city);
+  const handleCitySelect = (cityName: string) => {
+    setSelectedCity(cityName);
     setDialogOpen(true);
   };
 
@@ -148,7 +147,7 @@ export default function WeatherApp() {
                 <li
                   key={index}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => addCity(city)}
+                  onClick={() => handleCitySelect(city)}
                 >
                   {city}
                 </li>
@@ -169,12 +168,12 @@ export default function WeatherApp() {
             >
               <div className="flex items-center">
                 <div className="mr-3">
-                  {renderWeatherIcon(city.condition, 6)}
+                  {renderWeatherIcon(dataCache[city].condition, 6)}
                 </div>
-                <span className="font-medium">{city.name}</span>
+                <span className="font-medium">{city}</span>
               </div>
               <span className="text-lg font-semibold">
-                {city.temperature}°F
+                {dataCache[city].temperature}°F
               </span>
             </li>
           ))}
@@ -186,7 +185,7 @@ export default function WeatherApp() {
         {selectedCity && (
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{selectedCity.name}</DialogTitle>
+              <DialogTitle>{selectedCity}</DialogTitle>
             </DialogHeader>
             {/* TODO: Add dialog content */}
           </DialogContent>
