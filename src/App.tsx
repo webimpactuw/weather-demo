@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./components/ui/input";
 import { Cloud, CloudRain, CloudSnow, Sun, Wind } from "lucide-react";
 import {
@@ -48,6 +48,8 @@ export default function WeatherApp() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedCity, setSelectedCity] = useState<string>("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [loadingState, setLoadingState] = useState(false);
+  const [errorState, setErrorState] = useState(false);
 
   // Update suggestions based on search query
   const updateSuggestions = (query: string) => {
@@ -79,16 +81,7 @@ export default function WeatherApp() {
       return;
     }
 
-    // Generate random weather data for the new city
-    const newData = {
-      temperature: Math.floor(Math.random() * 40) + 50, // Random temp between 50-90
-      condition: conditions[Math.floor(Math.random() * conditions.length)],
-      humidity: Math.floor(Math.random() * 50) + 30, // Random humidity between 30-80
-      windSpeed: Math.floor(Math.random() * 15) + 3, // Random wind between 3-18
-    };
-
     setCities([...cities, cityName]);
-    setDataCache({ ...dataCache, [cityName]: newData });
     setSearchQuery("");
     setSuggestions([]);
     setShowSuggestions(false);
@@ -100,15 +93,45 @@ export default function WeatherApp() {
 
   // Add a city from suggestions
   const removeCity = (cityName: string) => {
-    setCities(cities.filter((city) => city !== cityName));
     setDialogOpen(false);
+    setCities(cities.filter((city) => city !== cityName));
   };
 
   // Handle city selection
   const handleCitySelect = (cityName: string) => {
+    if (!dataCache[cityName]) {
+      const selectedName = cityName;
+      setLoadingState(true);
+      setTimeout(() => {
+        if (selectedCity === selectedName && loadingState === true) {
+          // No timely response, so show error
+          setErrorState(true);
+        }
+      }, 5000);
+      fetchData(cityName);
+    }
     setSelectedCity(cityName);
     setDialogOpen(true);
   };
+
+  const fetchData = async (cityName: string) => {
+    fetch("https://goweather.xyz/weather/" + cityName)
+      .then((resp) => resp.json())
+      .then((jsonResp) => {
+        if (jsonResp.description) {
+          setDataCache({ ...dataCache, [cityName]: jsonResp });
+        } else {
+          setErrorState(true);
+        }
+        setLoadingState(false);
+        console.log(jsonResp);
+      });
+  };
+
+  // Reset error state on dialog change
+  useEffect(() => {
+    setErrorState(false);
+  }, [dialogOpen]);
 
   // Function to render the appropriate weather icon based on condition
   const renderWeatherIcon = (condition: string) => {
@@ -192,12 +215,18 @@ export default function WeatherApp() {
             <DialogHeader>
               <DialogTitle>{selectedCity}</DialogTitle>
             </DialogHeader>
-            {/* TODO: Add dialog content */}
+            {errorState ? (
+              <p>Error: Could not find</p>
+            ) : loadingState ? (
+              <Loader />
+            ) : (
+              <Card data={dataCache[selectedCity]} />
+            )}
             {cities.includes(selectedCity) ? (
               <button
                 onClick={() => removeCity(selectedCity)}
                 type="button"
-                className="rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
+                className="w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
               >
                 Remove City
               </button>
@@ -205,7 +234,7 @@ export default function WeatherApp() {
               <button
                 onClick={() => addCity(selectedCity)}
                 type="button"
-                className="rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
+                className="w-fit rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
               >
                 Add City
               </button>
