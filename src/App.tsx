@@ -3,7 +3,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Input } from "./components/ui/input";
-import { Cloud, CloudRain, CloudSnow, Sun, Wind } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,19 +10,19 @@ import {
   DialogTitle,
 } from "./components/ui/dialog";
 import CityNames from "./lib/citynames.json";
+import Loader from "./components/loader";
+import Info, { renderWeatherIcon } from "./components/info";
 
 type CityMapping = {
   [key: string]: CityData;
 };
 
-type CityData = {
+export type CityData = {
   temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
+  description: string;
+  forecast: { temperature: string; wind: string }[];
+  wind: number;
 };
-
-const conditions = ["sunny", "cloudy", "rainy", "partly-cloudy", "snowy"];
 
 export default function WeatherApp() {
   // Mock data for saved cities with weather information
@@ -31,15 +30,15 @@ export default function WeatherApp() {
   const [dataCache, setDataCache] = useState<CityMapping>({
     "New York City": {
       temperature: 72,
-      condition: "sunny",
-      humidity: 45,
-      windSpeed: 8,
+      description: "sunny",
+      forecast: [],
+      wind: 8,
     },
     London: {
       temperature: 62,
-      condition: "cloudy",
-      humidity: 78,
-      windSpeed: 12,
+      description: "cloudy",
+      forecast: [],
+      wind: 12,
     },
   });
 
@@ -133,24 +132,6 @@ export default function WeatherApp() {
     setErrorState(false);
   }, [dialogOpen]);
 
-  // Function to render the appropriate weather icon based on condition
-  const renderWeatherIcon = (condition: string) => {
-    switch (condition) {
-      case "sunny":
-        return <Sun className="h-8 w-8 text-yellow-500" />;
-      case "cloudy":
-        return <Cloud className="h-8 w-8 text-gray-500" />;
-      case "rainy":
-        return <CloudRain className="h-8 w-8 text-blue-500" />;
-      case "partly-cloudy":
-        return <Cloud className="h-8 w-8 text-gray-400" />;
-      case "snowy":
-        return <CloudSnow className="h-8 w-8 text-blue-300" />;
-      default:
-        return <Wind className="h-8 w-8 text-gray-500" />;
-    }
-  };
-
   return (
     <main className="container mx-auto p-8 max-w-4xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Weather Demo</h1>
@@ -196,7 +177,7 @@ export default function WeatherApp() {
             >
               <div className="flex items-center">
                 <div className="mr-3">
-                  {renderWeatherIcon(dataCache[city].condition)}
+                  {renderWeatherIcon(dataCache[city].description)}
                 </div>
                 <span className="font-medium">{city}</span>
               </div>
@@ -220,13 +201,13 @@ export default function WeatherApp() {
             ) : loadingState ? (
               <Loader />
             ) : (
-              <Card data={dataCache[selectedCity]} />
+              <Info data={dataCache[selectedCity]} />
             )}
             {cities.includes(selectedCity) ? (
               <button
                 onClick={() => removeCity(selectedCity)}
                 type="button"
-                className="w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
+                className="mx-auto w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
               >
                 Remove City
               </button>
@@ -234,7 +215,7 @@ export default function WeatherApp() {
               <button
                 onClick={() => addCity(selectedCity)}
                 type="button"
-                className="w-fit rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
+                className="mx-auto w-fit rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
               >
                 Add City
               </button>
