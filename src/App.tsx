@@ -12,6 +12,7 @@ import {
 import CityNames from "./lib/citynames.json";
 import Loader from "./components/loader";
 import Info, { renderWeatherIcon } from "./components/info";
+import Error from "./components/error";
 
 type CityMapping = {
   [key: string]: CityData;
@@ -25,27 +26,17 @@ export type CityData = {
 };
 
 export default function WeatherApp() {
-  // Mock data for saved cities with weather information
-  const [cities, setCities] = useState<string[]>(["New York City", "London"]);
-  const [dataCache, setDataCache] = useState<CityMapping>({
-    "New York City": {
-      temperature: 72,
-      description: "sunny",
-      forecast: [],
-      wind: 8,
-    },
-    London: {
-      temperature: 62,
-      description: "cloudy",
-      forecast: [],
-      wind: 12,
-    },
-  });
+  // Data handling state
+  const [cities, setCities] = useState<string[]>([]);
+  const [dataCache, setDataCache] = useState<CityMapping>({});
 
+  // Search query state
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [selectedCity, setSelectedCity] = useState<string>("");
+
+  // Interface state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingState, setLoadingState] = useState(false);
   const [errorState, setErrorState] = useState(false);
@@ -105,6 +96,7 @@ export default function WeatherApp() {
         if (selectedCity === selectedName && loadingState === true) {
           // No timely response, so show error
           setErrorState(true);
+          setLoadingState(false);
         }
       }, 5000);
       fetchData(cityName);
@@ -117,12 +109,12 @@ export default function WeatherApp() {
     fetch("https://goweather.xyz/weather/" + cityName)
       .then((resp) => resp.json())
       .then((jsonResp) => {
+        setLoadingState(false);
         if (jsonResp.description) {
           setDataCache({ ...dataCache, [cityName]: jsonResp });
         } else {
           setErrorState(true);
         }
-        setLoadingState(false);
         console.log(jsonResp);
       });
   };
@@ -167,28 +159,30 @@ export default function WeatherApp() {
       </div>
 
       {/* City List */}
-      <div className="border rounded-lg overflow-hidden">
-        <ul>
-          {cities.map((city, i) => (
-            <li
-              key={i}
-              className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
-              onClick={() => handleCitySelect(city)}
-            >
-              <div className="flex items-center">
-                <div className="mr-3">
-                  {renderWeatherIcon(dataCache[city].description)}
-                </div>
-                <span className="font-medium">{city}</span>
+      <ul className="border-2 border-gray-200 rounded-lg overflow-hidden">
+        {cities.map((city, i) => (
+          <li
+            key={i}
+            className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
+            onClick={() => handleCitySelect(city)}
+          >
+            <div className="flex items-center">
+              <div className="mr-3">
+                {renderWeatherIcon(dataCache[city].description)}
               </div>
-              <span className="text-lg font-semibold">
-                {dataCache[city].temperature}°F
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+              <span className="font-medium">{city}</span>
+            </div>
+            <span className="text-lg font-semibold">
+              {dataCache[city].temperature}°F
+            </span>
+          </li>
+        ))}
+      </ul>
 
+      {/* Info when no cities are saved */}
+      {cities.length === 0 &&
+      <p className="p-4 text-gray-500 text-lg text-center">Use the search bar above to find a city!</p>
+      }
       {/* City Detail Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         {selectedCity && (
@@ -197,7 +191,7 @@ export default function WeatherApp() {
               <DialogTitle>{selectedCity}</DialogTitle>
             </DialogHeader>
             {errorState ? (
-              <p>Error: Could not find</p>
+              <Error />
             ) : loadingState ? (
               <Loader />
             ) : (
