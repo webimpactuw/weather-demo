@@ -9,10 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./components/ui/dialog";
-import CityNames from "./lib/citynames.json";
+import CityNames from "./lib/citynames_full.json";
 import Loader from "./components/loader";
 import Info, { renderWeatherIcon } from "./components/info";
 import Error from "./components/error";
+import { cn } from "./lib/utils";
+import GitHub from "../public/github.svg";
 
 type CityMapping = {
   [key: string]: CityData;
@@ -99,7 +101,7 @@ export default function WeatherApp() {
           setLoadingState(false);
         }
       }, 5000);
-      fetchData(cityName);
+      fetchData(cityName.split(",")[0]);
     }
     setSelectedCity(cityName);
     setDialogOpen(true);
@@ -125,7 +127,14 @@ export default function WeatherApp() {
   }, [dialogOpen]);
 
   return (
-    <main className="container mx-auto p-8 max-w-4xl">
+    <main className="relative container mx-auto p-8 max-w-4xl">
+      <a
+        href="https://github.com/webimpactuw/weather-demo"
+        target="_blank"
+        className="absolute right-8 size-12 cursor-pointer hover:bg-gray-200 rounded-full transition-colors"
+      >
+        <img src={GitHub} />
+      </a>
       <h1 className="text-3xl font-bold mb-6 text-center">Weather Demo</h1>
 
       {/* Search Bar with Autocomplete */}
@@ -137,7 +146,7 @@ export default function WeatherApp() {
           onChange={handleSearchChange}
           onFocus={() => updateSuggestions(searchQuery)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          className="w-full"
+          className="w-full !text-lg"
         />
 
         {/* Autocomplete Suggestions */}
@@ -166,56 +175,63 @@ export default function WeatherApp() {
             className="flex items-center justify-between p-4 hover:bg-gray-50 cursor-pointer"
             onClick={() => handleCitySelect(city)}
           >
-            <div className="flex items-center">
-              <div className="mr-3">
-                {renderWeatherIcon(dataCache[city].description)}
-              </div>
+            <div className="flex items-center gap-4">
+              {renderWeatherIcon(dataCache[city].description)}
               <span className="font-medium">{city}</span>
             </div>
             <span className="text-lg font-semibold">
-              {dataCache[city].temperature}°F
+              {dataCache[city].temperature}
             </span>
           </li>
         ))}
       </ul>
 
       {/* Info when no cities are saved */}
-      {cities.length === 0 &&
-      <p className="p-4 text-gray-500 text-lg text-center">Use the search bar above to find a city!</p>
-      }
-      {/* City Detail Dialog */}
+      {cities.length === 0 && (
+        <p className="p-4 text-gray-500 text-lg text-center">
+          You have no cities saved.
+        </p>
+      )}
+
+      {/* City Information Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        {selectedCity && (
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{selectedCity}</DialogTitle>
-            </DialogHeader>
-            {errorState ? (
-              <Error />
-            ) : loadingState ? (
-              <Loader />
-            ) : (
-              <Info data={dataCache[selectedCity]} />
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedCity}</DialogTitle>
+          </DialogHeader>
+          {errorState ? (
+            <Error />
+          ) : loadingState ? (
+            <Loader />
+          ) : (
+            <Info data={dataCache[selectedCity]} />
+          )}
+          <div />
+          <button
+            onClick={() => removeCity(selectedCity)}
+            type="button"
+            className={cn(
+              "mx-auto w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white",
+              errorState || loadingState || !cities.includes(selectedCity)
+                ? "hidden"
+                : "",
             )}
-            {cities.includes(selectedCity) ? (
-              <button
-                onClick={() => removeCity(selectedCity)}
-                type="button"
-                className="mx-auto w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white"
-              >
-                Remove City
-              </button>
-            ) : (
-              <button
-                onClick={() => addCity(selectedCity)}
-                type="button"
-                className="mx-auto w-fit rounded-md text-sm transition-colors bg-blue-200 h-9 px-4 py-2 cursor-pointer hover:bg-blue-300"
-              >
-                Add City
-              </button>
+          >
+            Remove
+          </button>
+          <button
+            onClick={() => addCity(selectedCity)}
+            type="button"
+            className={cn(
+              "mx-auto w-fit rounded-md text-sm transition-colors bg-blue-400 h-9 px-4 py-2 cursor-pointer hover:bg-blue-500 text-white",
+              errorState || loadingState || cities.includes(selectedCity)
+                ? "hidden"
+                : "",
             )}
-          </DialogContent>
-        )}
+          >
+            Save
+          </button>
+        </DialogContent>
       </Dialog>
     </main>
   );
