@@ -62,6 +62,7 @@ export default function WeatherApp() {
       return;
     }
 
+    // Add city to list and update relevant state
     setCities([...cities, cityName]);
     setSearchQuery("");
     setSuggestions([]);
@@ -72,7 +73,7 @@ export default function WeatherApp() {
     setDialogOpen(false);
   };
 
-  // Add a city from suggestions
+  // Remove a city from suggestions
   const removeCity = (cityName: string) => {
     setDialogOpen(false);
     setCities(cities.filter((city) => city !== cityName));
@@ -80,6 +81,7 @@ export default function WeatherApp() {
 
   // Handle city selection
   const handleCitySelect = (cityName: string) => {
+    // Fetch city data if no data found
     if (!dataCache[cityName]) {
       const selectedName = cityName;
       setLoadingState(true);
@@ -90,17 +92,20 @@ export default function WeatherApp() {
           setLoadingState(false);
         }
       }, 5000);
-      fetchData(cityName.split(",")[0]);
+      fetchData(cityName);
     }
     setSelectedCity(cityName);
     setDialogOpen(true);
   };
 
+  // Fetch data for a city using weather-api
+  // https://github.com/robertoduessmann/weather-api
   const fetchData = async (cityName: string) => {
     fetch("https://goweather.xyz/weather/" + cityName)
       .then((resp) => resp.json())
       .then((jsonResp) => {
         setLoadingState(false);
+        // Save response data to cache
         if (jsonResp.description) {
           setDataCache({ ...dataCache, [cityName]: jsonResp });
         } else {

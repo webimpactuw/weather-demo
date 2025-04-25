@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 
 export type CityData = {
-  temperature: number;
+  temperature: string;
   description: string;
   forecast: { temperature: string; wind: string }[];
-  wind: number;
+  wind: string;
 };
 
 // Function to render the appropriate weather icon based on condition
@@ -52,8 +52,8 @@ export default function InfoCard({ data }: { data: CityData }) {
         <p className="text-4xl font-bold mt-2">{data.temperature}</p>
         <p className="text-lg text-gray-500 capitalize">{data.description}</p>
       </div>
-      <div className="mx-auto p-2 w-fit bg-blue-50 rounded-lg flex items-center gap-2">
-        <div className="mt-1">{renderWeatherIcon("Wind")}</div>
+      <div className="p-2 w-fit bg-blue-50 rounded-lg flex items-center gap-2">
+        <div>{renderWeatherIcon("Wind")}</div>
         <p className="text-gray-500">Wind:</p>
         <p className="font-medium text-lg">{data.wind}</p>
       </div>
