@@ -49,7 +49,7 @@ export default function InfoCard({ data }: { data: CityData }) {
     <>
       <div className="flex flex-col items-center gap-2">
         {renderWeatherIcon(data.description)}
-        <p className="text-4xl font-bold mt-2">{data.temperature}</p>
+        <p className="text-3xl font-bold mt-2">{data.temperature}</p>
         <p className="text-lg text-gray-500 capitalize">{data.description}</p>
       </div>
       <div className="p-2 w-fit bg-blue-50 rounded-lg flex items-center gap-2">
