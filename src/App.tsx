@@ -243,7 +243,7 @@ export default function WeatherApp() {
             type="button"
             className={cn(
               "mx-auto w-fit rounded-md text-sm transition-colors bg-blue-400 h-9 px-4 py-2 cursor-pointer hover:bg-blue-500 text-white",
-              // TODO: Hide remove button if city is added
+              // TODO: Hide save button if city is added
               errorState || loadingState ? "hidden" : "",
             )}
           >

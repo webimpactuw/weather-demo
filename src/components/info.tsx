@@ -50,6 +50,7 @@ export default function InfoCard({ data }: { data: CityData }) {
       {/* TODO: Align child elements to center */}
       <div className="flex flex-col gap-4">
         {renderWeatherIcon(data.description)}
+        {/* TODO: Set font weight to bold, text side to 3xl */}
         <p className="mt-2">{data.temperature}</p>
         <p className="text-lg text-gray-500 capitalize">{data.description}</p>
       </div>
@@ -60,7 +61,7 @@ export default function InfoCard({ data }: { data: CityData }) {
         {/* TODO: Set font weight to medium, text size to lg */}
         <p>{data.wind}</p>
       </div>
-      {/* TODO: Set font weight to medium, text size to 3xl */}
+      {/* TODO: Set font weight to medium, text size to xl */}
       <h3>3 Day Forecast</h3>
       <div className="flex flex-col justify-between gap-4">
         {data.forecast.map((e, i) => {
