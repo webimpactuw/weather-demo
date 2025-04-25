@@ -19,9 +19,6 @@ export type CityData = {
 
 // Function to render the appropriate weather icon based on condition
 export const renderWeatherIcon = (condition: string) => {
-  if (condition.toLowerCase().includes("thunder")) {
-    return <Zap className="h-8 w-8 text-yellow-500" />;
-  }
   switch (condition) {
     case "Clear":
     case "Sunny":
@@ -29,6 +26,7 @@ export const renderWeatherIcon = (condition: string) => {
     case "Cloudy":
       return <Cloudy className="h-8 w-8 text-gray-500" />;
     case "Rainy":
+    case "Light Rain":
       return <CloudRain className="h-8 w-8 text-blue-500" />;
     case "Partly cloudy":
       return <CloudSun className="h-8 w-8 text-gray-400" />;
@@ -36,6 +34,9 @@ export const renderWeatherIcon = (condition: string) => {
       return <CloudSnow className="h-8 w-8 text-blue-300" />;
     case "Wind":
       return <Wind className="h-8 w-8 text-gray-500" />;
+    case "Thunderstorm in Vicinity":
+    case "Thunderstorm":
+      return <Zap className="h-8 w-8 text-yellow-500" />;
     default:
       return <CircleHelp className="h-8 w-8 text-gray-500" />;
   }
