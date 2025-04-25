@@ -7,11 +7,21 @@ import {
   Wind,
   CircleHelp,
   Thermometer,
+  Zap,
 } from "lucide-react";
-import { CityData } from "../App";
+
+export type CityData = {
+  temperature: number;
+  description: string;
+  forecast: { temperature: string; wind: string }[];
+  wind: number;
+};
 
 // Function to render the appropriate weather icon based on condition
 export const renderWeatherIcon = (condition: string) => {
+  if (condition.toLowerCase().includes("thunder")) {
+    return <Zap className="h-8 w-8 text-yellow-500" />;
+  }
   switch (condition) {
     case "Clear":
     case "Sunny":
@@ -31,7 +41,7 @@ export const renderWeatherIcon = (condition: string) => {
   }
 };
 
-export default function Info({ data }: { data: CityData }) {
+export default function InfoCard({ data }: { data: CityData }) {
   if (!data) return;
 
   return (

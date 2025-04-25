@@ -9,28 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./components/ui/dialog";
-import CityNames from "./lib/citynames_full.json";
+import CityNames from "./lib/citynames_us.json";
 import Loader from "./components/loader";
-import Info, { renderWeatherIcon } from "./components/info";
+import InfoCard, { CityData, renderWeatherIcon } from "./components/info";
 import Error from "./components/error";
 import { cn } from "./lib/utils";
-import GitHub from "../public/github.svg";
-
-type CityMapping = {
-  [key: string]: CityData;
-};
-
-export type CityData = {
-  temperature: number;
-  description: string;
-  forecast: { temperature: string; wind: string }[];
-  wind: number;
-};
+import GitHub from "./assets/github.svg";
 
 export default function WeatherApp() {
   // Data handling state
   const [cities, setCities] = useState<string[]>([]);
-  const [dataCache, setDataCache] = useState<CityMapping>({});
+  const [dataCache, setDataCache] = useState<{ [key: string]: CityData }>({});
 
   // Search query state
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,6 +115,15 @@ export default function WeatherApp() {
     setErrorState(false);
   }, [dialogOpen]);
 
+  // Load cities by default
+  useEffect(() => {
+    const initCity = async (cityName: string) => {
+      await fetchData(cityName);
+      addCity(cityName);
+    };
+    initCity("New York");
+  }, []);
+
   return (
     <main className="relative container mx-auto p-8 max-w-4xl">
       <a
@@ -144,7 +142,10 @@ export default function WeatherApp() {
           placeholder="Search for a city..."
           value={searchQuery}
           onChange={handleSearchChange}
-          onFocus={() => updateSuggestions(searchQuery)}
+          onFocus={() => {
+            setShowSuggestions(true);
+            updateSuggestions(searchQuery);
+          }}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
           className="w-full !text-lg"
         />
@@ -176,11 +177,11 @@ export default function WeatherApp() {
             onClick={() => handleCitySelect(city)}
           >
             <div className="flex items-center gap-4">
-              {renderWeatherIcon(dataCache[city].description)}
+              {renderWeatherIcon(dataCache[city]?.description ?? "")}
               <span className="font-medium">{city}</span>
             </div>
             <span className="text-lg font-semibold">
-              {dataCache[city].temperature}
+              {dataCache[city]?.temperature ?? ""}
             </span>
           </li>
         ))}
@@ -204,7 +205,7 @@ export default function WeatherApp() {
           ) : loadingState ? (
             <Loader />
           ) : (
-            <Info data={dataCache[selectedCity]} />
+            <InfoCard data={dataCache[selectedCity]} />
           )}
           <div />
           <button
