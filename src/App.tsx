@@ -39,10 +39,10 @@ export default function WeatherApp() {
       return;
     }
 
+    // TODO: Allow all substrings in search query
+    // TODO: Prevent saved cities from appearing in suggestions
     const filtered = CityNames.filter(
-      (city) =>
-        city.toLowerCase().includes(query.toLowerCase()) &&
-        !cities.includes(city),
+      (city) => city.toLowerCase() === query.toLowerCase(),
     );
     setSuggestions(filtered.slice(0, 5));
   };
@@ -72,10 +72,11 @@ export default function WeatherApp() {
     setDialogOpen(false);
   };
 
-  // Add a city from suggestions
+  // Remove a city from suggestions
   const removeCity = (cityName: string) => {
     setDialogOpen(false);
-    setCities(cities.filter((city) => city !== cityName));
+    // TODO: Remove cityName from saved cities list
+    setCities(cities);
   };
 
   // Handle city selection
@@ -102,12 +103,23 @@ export default function WeatherApp() {
       .then((jsonResp) => {
         setLoadingState(false);
         if (jsonResp.description) {
-          setDataCache({ ...dataCache, [cityName]: jsonResp });
+          // TODO: Update data cache with received data
         } else {
-          setErrorState(true);
+          // TODO: Show error state
         }
         console.log(jsonResp);
       });
+
+    // TODO: Remove dummy data creation after fetch implementation
+    setDataCache({
+      ...dataCache,
+      [cityName]: {
+        description: "Clear",
+        forecast: [],
+        temperature: "10 °C",
+        wind: "10 km/h",
+      },
+    });
   };
 
   // Reset error state on dialog change
@@ -201,9 +213,11 @@ export default function WeatherApp() {
             <DialogTitle>{selectedCity}</DialogTitle>
           </DialogHeader>
           {errorState ? (
-            <Error />
+            // TODO: Show Error component
+            <></>
           ) : loadingState ? (
-            <Loader />
+            // TODO: Show loading component
+            <></>
           ) : (
             <InfoCard data={dataCache[selectedCity]} />
           )}
@@ -213,9 +227,8 @@ export default function WeatherApp() {
             type="button"
             className={cn(
               "mx-auto w-fit rounded-md text-sm transition-colors bg-red-400 h-9 px-4 py-2 cursor-pointer hover:bg-red-500 text-white",
-              errorState || loadingState || !cities.includes(selectedCity)
-                ? "hidden"
-                : "",
+              // TODO: Hide remove button if city is not added
+              errorState || loadingState ? "hidden" : "",
             )}
           >
             Remove
@@ -225,9 +238,8 @@ export default function WeatherApp() {
             type="button"
             className={cn(
               "mx-auto w-fit rounded-md text-sm transition-colors bg-blue-400 h-9 px-4 py-2 cursor-pointer hover:bg-blue-500 text-white",
-              errorState || loadingState || cities.includes(selectedCity)
-                ? "hidden"
-                : "",
+              // TODO: Hide remove button if city is added
+              errorState || loadingState ? "hidden" : "",
             )}
           >
             Save
